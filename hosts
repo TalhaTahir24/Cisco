@@ -1,0 +1,23 @@
+
+[R1]
+10.0.137.95   ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+[R2]
+10.0.137.124
+[R3]
+10.0.137.193
+[R4]
+10.0.137.244
+[SW1]
+10.0.137.68
+[SW2]
+10.0.137.203
+[SW3]
+10.0.137.170
+[SW4]
+10.0.137.184
+[all:vars]
+ansible_user=admin
+ansible_password=admin
+ansible_connection=network_cli
+ansible_network_os=ios
+host_key_checking=false

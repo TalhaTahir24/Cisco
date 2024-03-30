@@ -1,0 +1,65 @@
+---
+- name: Configure R1
+  hosts: R1
+  gather_facts: false
+  tasks:
+    - name: Assign IP address to GigabitEthernet0/0
+      cisco.ios.ios_config:
+        lines:
+          - ip address 192.168.10.1 255.255.255.0
+          - no shutdown
+          - description from R1 to R2
+        parents: interface GigabitEthernet0/0
+
+    - name: Assign IP address to GigabitEthernet0/2
+      cisco.ios.ios_config:
+        lines:
+          - ip address 172.168.10.1 255.255.255.0
+          - no shutdown
+          - description from R1 to SW1
+        parents: interface GigabitEthernet0/2
+
+- name: Create VLANs on Cisco switches
+  hosts: SW1
+  gather_facts: false
+  connection: network_cli
+  tasks:
+    - name: Ensure VLANs are configured
+      cisco.ios.ios_vlans:
+        config:
+          - name: "{{ item.name }}"
+            vlan_id: "{{ item.vlan_id }}"
+            state: active
+      with_items:
+        - { vlan_id: 10, name: "VLAN_10" }
+        - { vlan_id: 20, name: "VLAN_20" }
+        - { vlan_id: 30, name: "VLAN_30" }
+
+- name: Configure SW1
+  hosts: SW1
+  gather_facts: false
+  tasks:
+    - name: Assign IP address to GigabitEthernet0/0
+      cisco.ios.ios_config:
+        lines:
+          - no switchport
+          - ip address 172.168.10.2 255.255.255.0
+          - no shutdown
+          - description from SW1 to R1
+        parents: interface GigabitEthernet0/0
+
+    - name: Add port to VLAN
+      cisco.ios.ios_config:
+        lines:
+          - switchport mode access
+          - switchport access vlan 10
+          - no shutdown
+          - description connected from SW1 to vpc1
+        parents: interface GigabitEthernet0/1
+
+    - name: Assign IP to VLAN
+      cisco.ios.ios_config:
+        lines:
+          - no shutdown
+          - ip address 172.168.11.1 255.255.255.0
+        parents: interface Vlan10
