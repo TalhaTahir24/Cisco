@@ -1,0 +1,56 @@
+---
+- name: Configure R2
+  hosts: R2
+  gather_facts: no
+
+
+  tasks:
+    - name: Assing ip address to GigabitEthernet0/0
+      cisco.ios.ios_config:
+        lines:
+          - ip address 192.168.10.2 255.255.255.0
+          - no shutdown
+          - description from R2 to R1
+        parents: interface GigabitEthernet0/0
+    - name: Assing ip address to GigabitEthernet0/2
+      cisco.ios.ios_config:
+        lines:
+          - ip address 172.168.20.1 255.255.255.0
+          - no shutdown
+          - description from R2 to SW2
+        parents: interface GigabitEthernet0/2
+
+- name: Configure SW2
+  hosts: SW2
+  gather_facts: no
+
+
+  tasks:
+    - name: Assing ip address to GigabitEthernet0/0
+      cisco.ios.ios_config:
+        lines:
+          - no switchport
+          - ip address 172.168.20.2 255.255.255.0
+          - no shutdown
+          - description from SW2 to R2
+        parents: interface GigabitEthernet0/0
+
+
+
+
+- name: Create VLANs on Cisco switches
+  hosts: SW2
+  gather_facts: no
+  connection: network_cli
+  tasks:
+    - name: Ensure VLANs are configured
+      cisco.ios.ios_vlans:
+        config:
+          - name: create vlans
+            vlan_id: "{{ item.vlan_id }}"
+            name: "{{ item.name }}"
+            state: active
+      with_items:
+        - { vlan_id: 10, name: "VLAN_10" }
+        - { vlan_id: 20, name: "VLAN_20" }
+        - { vlan_id: 30, name: "VLAN_30" }
