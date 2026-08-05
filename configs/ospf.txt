@@ -1,0 +1,23 @@
+! OSPF - single area, deterministic router-ids, passive access interfaces
+!
+router ospf 1
+ router-id 1.1.1.1
+ network 192.168.10.0 0.0.0.255 area 0
+ network 172.168.10.0 0.0.0.255 area 0
+ network 192.168.20.0 0.0.0.255 area 0
+ passive-interface GigabitEthernet0/2
+
+! Advertise the default route into OSPF (with metric so it is not the preferred path)
+default-information originate metric 100
+
+! Two routers can be tied: cost is inversely derived from bandwidth by default
+! show ip ospf interface gives the computed cost per interface
+
+! Loopback used for management + OSPF stability
+interface Loopback0
+ ip address 1.1.1.1 255.255.255.255
+
+! Verify
+! show ip ospf neighbor
+! show ip ospf database
+! show ip route ospf

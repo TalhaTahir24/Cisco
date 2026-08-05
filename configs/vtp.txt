@@ -1,0 +1,28 @@
+! VTP - VLAN Trunking Protocol
+!
+! Core switch is the VTP server (v3), downstream switches are clients
+! VLAN database is propagated over trunks automatically
+!
+! Core switch
+vtp mode server
+vtp domain CORP
+vtp password VtpSecret
+vtp version 3
+! Only the server needs the VLAN config; clients receive it over the trunk
+vlan 10
+ name Engineering
+vlan 20
+ name Operations
+vlan 30
+ name Guest
+
+! Downstream switch
+! vtp mode client
+! vtp domain CORP
+! vtp password VtpSecret
+! vtp version 3
+! vtp pruning
+
+! Verify
+! show vtp status
+! show vtp password

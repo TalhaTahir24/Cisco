@@ -1,0 +1,19 @@
+! Trunking between switches
+!
+! Static trunk (DTP not relied on)
+interface GigabitEthernet0/24
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30
+ switchport trunk native vlan 99
+
+! Disable DTP negotiation explicitly
+ switchport nonegotiate
+
+! VLAN 99 used as native VLAN (separated from user traffic)
+vlan 99
+ name Native
+
+! Verify
+! show interfaces GigabitEthernet0/24 switchport
+! show interfaces trunk

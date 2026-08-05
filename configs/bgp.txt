@@ -1,0 +1,27 @@
+! BGP - multi-AS topology
+!
+! AS 65001  (R1)
+! AS 65002  (R2)
+! eBGP peering between directly connected edge routers
+!
+router bgp 65001
+ bgp router-id 1.1.1.1
+ bgp log-neighbor-changes
+ ! eBGP peer (R2 belongs to AS 65002)
+ neighbor 192.168.10.2 remote-as 65002
+ neighbor 192.168.10.2 description eBGP-to-R2
+ ! iBGP peer inside the same AS
+ neighbor 10.0.0.2 remote-as 65001
+ neighbor 10.0.0.2 update-source Loopback0
+ network 172.168.10.0 mask 255.255.255.0
+
+! MD5 authentication on the eBGP session
+neighbor 192.168.10.2 password BgpPass01
+
+! BGP next-hop self for iBGP routes (eBGP routes are not re-advertised to iBGP by default)
+neighbor 10.0.0.2 next-hop-self
+
+! Verify
+! show ip bgp summary
+! show ip bgp
+! show ip bgp neighbors 192.168.10.2

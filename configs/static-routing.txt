@@ -1,0 +1,17 @@
+! Static routing
+!
+! IPv4 static route to a directly connected next hop
+ip route 10.0.20.0 255.255.255.0 10.0.10.2
+
+! Static route via exit interface
+ip route 10.0.30.0 255.255.255.0 GigabitEthernet0/1
+
+! Floating static route - backup path with higher administrative distance (200)
+ip route 10.0.20.0 255.255.255.0 10.0.10.2 200
+
+! Default route pointing to the ISP handoff
+ip route 0.0.0.0 0.0.0.0 10.0.255.1
+
+! Verify
+! show ip route
+! show ip route static

@@ -1,1 +1,3 @@
-host1
+ansible/hosts
+*.pem
+__pycache__/

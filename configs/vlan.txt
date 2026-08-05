@@ -1,0 +1,28 @@
+! VLAN configuration
+!
+! Create VLANs
+vlan 10
+ name Engineering
+vlan 20
+ name Operations
+vlan 30
+ name Guest
+
+! Access port - single host on VLAN 10
+interface GigabitEthernet0/1
+ switchport mode access
+ switchport access vlan 10
+ no shutdown
+
+! Switch Virtual Interface (SVI) - inter-VLAN routing gateway for VLAN 10
+interface Vlan10
+ ip address 172.168.11.1 255.255.255.0
+ no shutdown
+
+! Enable routing so SVIs can forward between VLANs
+ip routing
+
+! Verify
+! show vlan brief
+! show interfaces trunk
+! show ip interface brief

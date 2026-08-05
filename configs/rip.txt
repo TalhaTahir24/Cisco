@@ -1,0 +1,27 @@
+! RIP version 2 (classless, supports VLSM and authentication)
+!
+router rip
+ version 2
+ network 192.168.10.0
+ network 172.168.10.0
+ no auto-summary
+
+! Advertise the default route to the RIP domain
+default-information originate
+
+! Prevent RIP updates from leaking out access-side interfaces
+passive-interface GigabitEthernet0/2
+
+! Enable authentication on the point-to-point link
+key chain RIP-KEY
+ key 1
+  key-string SecureKey01
+!
+interface GigabitEthernet0/0
+ ip rip authentication mode md5
+ ip rip authentication key-chain RIP-KEY
+
+! Verify
+! show ip rip database
+! debug ip rip
+! show ip protocols
