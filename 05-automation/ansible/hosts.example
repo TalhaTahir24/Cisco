@@ -1,0 +1,29 @@
+[edge_routers]
+r1 ansible_host=10.0.137.95
+r2 ansible_host=10.0.137.124
+
+[core_routers]
+r3 ansible_host=10.0.137.193
+r4 ansible_host=10.0.137.244
+
+[branch_routers]
+r5 ansible_host=10.0.138.10
+
+[switches]
+sw1 ansible_host=10.0.137.68
+sw2 ansible_host=10.0.137.203
+sw3 ansible_host=10.0.137.170
+sw4 ansible_host=10.0.137.184
+
+[network_devices:children]
+edge_routers
+core_routers
+branch_routers
+switches
+
+[all:vars]
+ansible_user=<USERNAME>
+ansible_password=<PASSWORD>
+ansible_connection=network_cli
+ansible_network_os=ios
+host_key_checking=false

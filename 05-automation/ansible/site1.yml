@@ -1,0 +1,56 @@
+---
+- name: Deploy routing and high-availability config to edge routers
+  hosts: edge_routers
+  gather_facts: false
+  connection: network_cli
+  tasks:
+    - name: Ensure OSPF multi-area is configured on core
+      cisco.ios.ios_config:
+        lines:
+          - router ospf 1
+          - router-id 2.2.2.2
+          - network 10.0.0.0 0.0.0.3 area 0
+          - network 172.16.10.0 0.0.0.255 area 10
+          - network 172.16.20.0 0.0.0.255 area 20
+        parents: router ospf 1
+        replace: block
+
+    - name: Deploy VRRP virtual gateway with uplink tracking
+      cisco.ios.ios_config:
+        lines:
+          - vrrp 1 ip 172.16.1.1
+          - vrrp 1 priority 110
+          - vrrp 1 preempt
+          - vrrp 1 track interface GigabitEthernet0/1 decrement 20
+        parents: interface GigabitEthernet0/0
+
+    - name: Configure IP SLA tracking for dual-ISP failover
+      cisco.ios.ios_config:
+        lines:
+          - ip sla 1
+          - icmp-echo 203.0.113.1 source-interface GigabitEthernet0/0
+          - frequency 5
+          - ip sla schedule 1 life forever start-time now
+        match: exact
+
+    - name: Push control-plane policing policy
+      cisco.ios.ios_config:
+        lines:
+          - service-policy input COPP-POLICY
+        parents: control-plane
+
+- name: Gather facts and validate routing state
+  hosts: edge_routers
+  gather_facts: false
+  connection: network_cli
+  tasks:
+    - name: Collect OSPF neighbor state
+      cisco.ios.ios_command:
+        commands:
+          - show ip ospf neighbor
+          - show vrrp brief
+      register: net_state
+
+    - name: Show collected state
+      ansible.builtin.debug:
+        var: net_state.stdout_lines

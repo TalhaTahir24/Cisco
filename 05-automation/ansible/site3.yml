@@ -1,0 +1,37 @@
+---
+- name: Deploy security hardening across all network devices
+  hosts: network_devices
+  gather_facts: false
+  connection: network_cli
+  tasks:
+    - name: Enable AAA with TACACS+ and local fallback
+      cisco.ios.ios_config:
+        lines:
+          - aaa new-model
+          - aaa authentication login default group tacacs+ local
+          - aaa authorization exec default group tacacs+ local
+          - aaa accounting exec default start-stop group tacacs+
+        match: exact
+
+    - name: Harden remote management lines
+      cisco.ios.ios_config:
+        lines:
+          - login authentication default
+          - transport input ssh
+          - exec-timeout 10 0
+        parents: line vty 0 4
+
+    - name: Disable insecure services
+      cisco.ios.ios_config:
+        lines:
+          - no ip http server
+          - no ip http secure-server
+          - no service pad
+
+    - name: Ensure NTP authentication is enabled
+      cisco.ios.ios_config:
+        lines:
+          - ntp authenticate
+          - ntp authentication-key 1 md5 NtpKey01
+          - ntp trusted-key 1
+        match: exact

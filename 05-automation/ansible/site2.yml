@@ -1,0 +1,28 @@
+---
+- name: Configure branch site with a templated BGP/iBGP profile
+  hosts: branch_routers
+  gather_facts: false
+  connection: network_cli
+  tasks:
+    - name: Push BGP multihoming config
+      cisco.ios.ios_config:
+        lines:
+          - router bgp 65001
+          - bgp router-id 1.1.1.1
+          - bgp log-neighbor-changes
+          - network 172.16.0.0 mask 255.255.0.0
+          - neighbor 203.0.113.1 remote-as 64500
+          - neighbor 203.0.113.1 description ISP-A-Primary
+          - neighbor 198.51.100.1 remote-as 64501
+          - neighbor 198.51.100.1 description ISP-B-Backup
+        parents: router bgp 65001
+        replace: block
+
+    - name: Deploy site-to-site IPsec tunnel
+      cisco.ios.ios_config:
+        lines:
+          - crypto ikev2 proposal IKE-PROP
+          - encryption aes-gcm-256
+          - integrity prf-sha256
+          - group 14
+        match: exact

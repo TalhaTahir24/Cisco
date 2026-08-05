@@ -1,65 +1,49 @@
-# CCNA 200-301 Lab
+# Cisco Configuration Playbook
 
-Hands-on network labs and IOS configuration practice mapped to the CCNA 200-301 syllabus. Built on a physical lab (routers R1-R4, switches SW1-SW4) with Ansible for push-config.
+Production-grade IOS/IOS-XE configuration patterns from real network work: multi-area OSPF, dual-homed BGP, redundant gateways, site-to-site IPsec, zone-based firewalls, and monitoring. Each file is a self-contained reference with the config and the verify commands that prove it works.
 
-## Syllabus map
+## What's here
 
-| Domain | Weight | Directory |
-|--------|--------|-----------|
-| 1. Network Fundamentals | 20% | [`01-network-fundamentals/`](01-network-fundamentals/) |
-| 2. Network Access | 20% | [`02-network-access/`](02-network-access/) |
-| 3. IP Connectivity | 25% | [`03-ip-connectivity/`](03-ip-connectivity/) |
-| 4. IP Services | 10% | [`04-ip-services/`](04-ip-services/) |
-| 5. Security Fundamentals | 15% | [`05-security-fundamentals/`](05-security-fundamentals/) |
-| 6. Automation and Programmability | 10% | [`06-automation-programmability/`](06-automation-programmability/) |
-| Ansible push-config | — | [`ansible/`](ansible/) |
+| Area | Files | What you'd use it for |
+|------|-------|------------------------|
+| [Routing](01-routing/) | Multi-area OSPF + summarization, redistribution, BGP multihoming, VRF-lite | Scaling routing past a flat single-area lab; isolating tenants/environments |
+| [High availability](02-high-availability/) | VRRP/HSRP with uplink tracking, LACP EtherChannel, STP hardening | Redundant default gateways and loop-free, resilient switching |
+| [Security](03-security/) | Site-to-site IPsec (IKEv2), zone-based firewall, AAA/TACACS+, CoPP | Edge VPNs, zone segmentation, device hardening |
+| [Services & monitoring](04-services-monitoring/) | Dual-ISP NAT + IP SLA, QoS, NetFlow, NTP/SNMPv3/Syslog | Reliable egress, visibility, and audit trail |
+| [Automation](05-automation/) | Ansible playbooks pushing routing/security config | Config-as-code instead of one-off CLI |
 
-## Topics covered
+## Config philosophy
 
-### 1. Network Fundamentals
-LAN/WAN/MAN, network devices (router, switch, firewall, access point), OSI 7-layer and TCP/IP models, IPv4 addressing, IPv6 addressing, subnetting, binary/hex conversion, Ethernet, MAC addresses, ARP, cabling (copper/fiber), network topologies.
+- **Route with filters, not defaults.** Redistribution is always gated by route-maps and tags; eBGP only ever advertises your own prefix and filters bogons inbound.
+- **Redundancy that actually fails over.** VRRP/HSRP track the uplink, so the standby takes over when the primary WAN dies — not when the box crashes.
+- **Security in layers.** CoPP protects the control plane, AAA centralizes access with a local fallback, and zone-based policies replace blanket ACLs.
+- **Verify, don't assume.** Every file ends with the `show` commands that confirm the feature is working before you walk away.
 
-### 2. Network Access
-VLANs, trunking (802.1Q), inter-VLAN routing, DTP, VTP, STP/RSTP, EtherChannel (LACP/PAgP), port security, switch hardening, wireless LAN and wireless security basics.
+## Design context
 
-### 3. IP Connectivity
-Routing fundamentals, static routing, default routing, dynamic routing, RIP, OSPF single-area, route selection (administrative distance, longest prefix match), routing table, first-hop redundancy.
+These patterns reflect work on real edge/network builds:
 
-### 4. IP Services
-DHCP, DNS, NAT/PAT, NTP, SNMP, Syslog, QoS basics, SSH, TFTP/FTP, HTTP vs HTTPS.
-
-### 5. Security Fundamentals
-AAA, authentication/authorization/accounting, ACLs (standard and extended), VPN concepts, firewalls, IDS/IPS, password security, WPA2/WPA3, device hardening.
-
-### 6. Automation and Programmability
-SDN, REST APIs, JSON, YAML, Cisco DNA Center, controllers, configuration management, automation concepts, cloud networking basics.
-
-## Config reference
-
-| Topic | File |
-|-------|------|
-| VLANs | [`02-network-access/vlan.config`](02-network-access/vlan.config) |
-| Trunking (802.1Q) | [`02-network-access/trunking.config`](02-network-access/trunking.config) |
-| Inter-VLAN routing | [`02-network-access/inter-vlan-routing.config`](02-network-access/inter-vlan-routing.config) |
-| EtherChannel (LACP/PAgP) | [`02-network-access/etherchannel.config`](02-network-access/etherchannel.config) |
-| Port security | [`02-network-access/port-security.config`](02-network-access/port-security.config) |
-| Static routing | [`03-ip-connectivity/static-routing.config`](03-ip-connectivity/static-routing.config) |
-| RIP v2 | [`03-ip-connectivity/rip.config`](03-ip-connectivity/rip.config) |
-| OSPF single-area | [`03-ip-connectivity/ospf-single-area.config`](03-ip-connectivity/ospf-single-area.config) |
-| BGP (reference) | [`03-ip-connectivity/bgp.config`](03-ip-connectivity/bgp.config) |
-| DHCP + DNS | [`04-ip-services/dhcp-dns.config`](04-ip-services/dhcp-dns.config) |
-| NAT/PAT | [`04-ip-services/nat-pat.config`](04-ip-services/nat-pat.config) |
-| NTP/SNMP/Syslog | [`04-ip-services/ntp-snmp-syslog.config`](04-ip-services/ntp-snmp-syslog.config) |
-| SSH | [`04-ip-services/ssh.config`](04-ip-services/ssh.config) |
-| ACLs | [`05-security-fundamentals/acl.config`](05-security-fundamentals/acl.config) |
-| AAA | [`05-security-fundamentals/aaa.config`](05-security-fundamentals/aaa.config) |
-| Device hardening | [`05-security-fundamentals/password-hardening.config`](05-security-fundamentals/password-hardening.config) |
+- **Dual ISP with VIP failover** — `vrrp-hsrp.config` + `nat-dual-isp.config` match the [external network design](https://github.com/TalhaTahir24/network-designs/blob/main/docs/external-network-lab.md): two upstreams, virtual gateway, active-passive firewall pair, DMZ/Internal/Management zoning.
+- **Zone segmentation** — `zone-based-firewall.config` implements the same zone model (DMZ / INTERNAL / MGMT / WAN) used in production environments.
+- **Site-to-site connectivity** — `ipsec-site-to-site.config` is the IKEv2/AES-GCM tunnel pattern used for branch and inter-site links.
 
 ## Ansible usage
 
 ```bash
-ansible-playbook -i hosts ansible/site1.yml
+cd 05-automation/ansible
+cp hosts.example hosts   # fill in device IPs + credentials
+ansible-playbook site1.yml
 ```
 
-Copy `ansible/hosts.example` to `ansible/hosts` and fill in your device IPs and credentials.
-Never commit the real `hosts` file — it is gitignored.
+`hosts` is gitignored — never commit credentials. `hosts.example` holds placeholders only.
+
+## Layout
+
+```
+Cisco/
+  01-routing/              OSPF multi-area, redistribution, BGP, VRF-lite
+  02-high-availability/    VRRP/HSRP, EtherChannel, STP hardening
+  03-security/             IPsec, zone-based firewall, AAA, CoPP
+  04-services-monitoring/  NAT, QoS, NetFlow, NTP/SNMP/Syslog
+  05-automation/ansible/   playbooks + inventory
+```
